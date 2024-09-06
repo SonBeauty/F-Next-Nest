@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
-import { Model } from 'mongoose';
-
+import mongoose, { Model } from 'mongoose';
+import { hashPassword } from 'src/helpers/util';
+import aqp from 'api-query-params';
 @Injectable()
 export class UsersService {
   constructor(
@@ -12,23 +13,64 @@ export class UsersService {
     private userModel: Model<User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  isEmailExist = async (email: string) => {
+    const user = await this.userModel.exists({ email });
+    if (user) return true;
+    return false;
+  };
+  async create(createUserDto: CreateUserDto) {
+    const { name, email, password, phone, image } = createUserDto;
+    const isEmailExist = await this.isEmailExist(email);
+    if (isEmailExist)
+      throw new BadRequestException(`Email ${email} already exist`);
+    const hashedPassword = await hashPassword(password);
+    const user = await this.userModel.create({
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      image,
+    });
+    return user;
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll(query: string, current: number, pageSize: number) {
+    const { filter, sort } = aqp(query);
+
+    if (filter.current) delete filter.current;
+    if (filter.pageSize) delete filter.pageSize;
+
+    if (!current) current = 1;
+    if (!pageSize) pageSize = 10;
+
+    const totalItems = (await this.userModel.find(filter)).length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const skip = (current - 1) * pageSize;
+    const results = await this.userModel
+      .find(filter)
+      .limit(pageSize)
+      .skip(skip)
+      .sort(sort as any)
+      .select('-password');
+    return { results, totalPages };
+  }
+
+  async findByEmail(email: string) {
+    return await this.userModel.findOne({ email });
   }
 
   findOne(id: number) {
     return `This action returns a #${id} user`;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const { _id } = updateUserDto;
+    return await this.userModel.updateOne({ _id }, { ...updateUserDto });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    if (!mongoose.isValidObjectId(id))
+      throw new BadRequestException('Invalid id');
+    return await this.userModel.deleteOne({ _id: id });
   }
 }
