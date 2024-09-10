@@ -8,11 +8,15 @@ import { hashPassword } from 'src/helpers/util';
 import aqp from 'api-query-params';
 import { SignInDto } from '../auth/dto/signIn.dto';
 import dayjs from 'dayjs';
+import { MailerService } from '@nestjs-modules/mailer';
+import { v4 as uuidv4 } from 'uuid';
+
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<User>,
+    private mailerService: MailerService,
   ) {}
 
   isEmailExist = async (email: string) => {
@@ -86,19 +90,29 @@ export class UsersService {
 
     //hash password
     const hashedPassword = await hashPassword(password);
+    const codeId = uuidv4();
     const user = await this.userModel.create({
       name,
       email,
       password: hashedPassword,
       isActive: false,
       codeExpired: dayjs().add(1, 'minutes'),
-      codeId: '',
+      codeId,
+    });
+
+    // send email
+    this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Acitve your account at @Sondeptrai',
+      template: 'register',
+      context: {
+        name: user?.name ?? user.email,
+        activationCode: codeId,
+      },
     });
 
     return {
       _id: user._id,
     };
-    // send email
-    return user;
   }
 }

@@ -15,8 +15,11 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/passport/jwt-auth.guard';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 @Module({
   imports: [
+    AuthModule,
     UsersModule,
     LikesModule,
     MenuItemOptionsModule,
@@ -36,7 +39,33 @@ import { JwtAuthGuard } from './modules/auth/passport/jwt-auth.guard';
       }),
       inject: [ConfigService],
     }),
-    AuthModule,
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        transport: {
+          host: 'smtp.gmail.com',
+          port: 465,
+          // ignoreTLS: true,
+          secure: true,
+          auth: {
+            user: configService.get<string>('MAIL_USER'),
+            pass: configService.get<string>('MAIL_PASSWORD'),
+          },
+        },
+        defaults: {
+          from: '"No Reply" <no-reply@localhost',
+        },
+        template: {
+          dir: process.cwd() + '/src/mail/templates/',
+          options: {
+            strict: true,
+            viewEngine: 'handlebars',
+          },
+          adapter: new HandlebarsAdapter(),
+        },
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [AppController],
   providers: [
