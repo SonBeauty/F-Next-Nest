@@ -1,5 +1,11 @@
+import UserTable from "@/components/admin/user.table";
+
 const ManageUserPage = () => {
-  return <div>Manage User</div>
+    return (
+        <div>
+            <UserTable />
+        </div>
+    )
 }
 
-export default ManageUserPage
+export default ManageUserPage;
