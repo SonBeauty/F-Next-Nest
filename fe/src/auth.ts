@@ -1,5 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { InvalidEmailPasswordError, IsActiveError } from "./utils/errors";
+import { sendRequest } from "./utils/api";
+import { IUser } from "./types/next-auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -11,33 +14,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: {},
       },
       authorize: async (credentials) => {
-        console.log("object", credentials);
-        let user = null;
-        user = {
-          _id: "123",
-          username: "123",
-          email: "123",
-          isVerify: "123",
-          type: "123",
-          role: "123",
-        };
-        // logic to salt and hash password
+        const res = await sendRequest<IBackendRes<ILogin>>({
+          method: "POST",
+          url: "http://localhost:3005/api/v1/auth/login",
+          body: { ...credentials },
+        });
 
-        // logic to verify if the user exists
-        //call backend
-
-        if (!user) {
-          // No user found, so this is their first attempt to login
-          // meaning this is also the place you could do registration
-          throw new Error("User not found.");
+        if (!res.statusCode) return res;
+        if (res.statusCode == 401) {
+          throw new InvalidEmailPasswordError();
         }
-
-        // return user object with their profile data
-        return user;
+        if (res.statusCode == 400) throw new IsActiveError();
       },
     }),
   ],
   pages: {
     signIn: "/auth/login",
+  },
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) {
+        // User is available during sign-in
+        token.user = user as IUser;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      (session.user as IUser) = token.user;
+      return session;
+    },
   },
 });
