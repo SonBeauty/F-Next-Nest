@@ -16,7 +16,6 @@ type MenuItem = Required<MenuProps>["items"][number];
 const AdminSideBar = () => {
     const { Sider } = Layout;
     const { collapseMenu } = useContext(AdminContext)!;
-    console.log(collapseMenu);
 
     const items: MenuItem[] = [
         {

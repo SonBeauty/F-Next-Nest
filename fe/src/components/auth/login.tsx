@@ -1,17 +1,26 @@
 'use client'
-import { Button, Col, Divider, Form, Input, Row } from 'antd';
+import { Button, Col, Divider, Form, Input, notification, Row } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { signIn } from "next-auth/react"
 import { authenticate } from '@/utils/actions';
+import { useRouter } from 'next/navigation';
 
 const Login = () => {
-
+    const router = useRouter()
     const onFinish = async (values: any) => {
-        const { email, password } = values
+        const { username, password } = values
 
         // triggr sign -in
-        const res = await authenticate(email, password)
+        const res = await authenticate(username, password)
+        if (res?.error) {
+            notification.error({ message: "Error login", description: res?.error })
+        } else if (res?.code === 2) {
+            router.push('/verify')
+        } else {
+            // redirect to dashboard
+            router.push("/dashboard")
+        }
         console.log(">>>check data:", res);
     };
 
@@ -33,11 +42,11 @@ const Login = () => {
                     >
                         <Form.Item
                             label="Email"
-                            name="email"
+                            name="username"
                             rules={[
                                 {
                                     required: true,
-                                    message: 'Please input your email!',
+                                    message: 'Please input your Email!',
                                 },
                             ]}
                         >
@@ -56,9 +65,6 @@ const Login = () => {
                         >
                             <Input.Password />
                         </Form.Item>
-
-
-
                         <Form.Item
                         >
                             <Button type="primary" htmlType="submit">

@@ -10,21 +10,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // You can specify which fields should be submitted, by adding keys to the `credentials` object.
       // e.g. domain, username, password, 2FA token, etc.
       credentials: {
-        email: {},
+        username: {},
         password: {},
       },
       authorize: async (credentials) => {
         const res = await sendRequest<IBackendRes<ILogin>>({
           method: "POST",
           url: "http://localhost:3005/api/v1/auth/login",
-          body: { ...credentials },
+          body: {
+            username: credentials.username,
+            password: credentials.password,
+          },
         });
 
-        if (!res.statusCode) return res;
-        if (res.statusCode == 401) {
+        if (res.statusCode === 201) {
+          // return user object with their profile data
+
+          return {
+            _id: res.data?.user?._id,
+            name: res.data?.user?.name,
+            email: res.data?.user?.email,
+            access_token: res.data?.access_token,
+          };
+        } else if (+res.statusCode === 401) {
           throw new InvalidEmailPasswordError();
+        } else if (+res.statusCode === 400) {
+          throw new Error("1234");
+        } else {
+          throw new Error("Internal server error");
         }
-        if (res.statusCode == 400) throw new IsActiveError();
       },
     }),
   ],
@@ -42,6 +56,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     session({ session, token }) {
       (session.user as IUser) = token.user;
       return session;
+    },
+    authorized: async ({ auth }) => {
+      return !!auth;
     },
   },
 });
