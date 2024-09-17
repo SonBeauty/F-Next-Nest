@@ -43,8 +43,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         transport: {
-          host: 'smtp.gmail.com',
-          port: 465,
+          host: configService.get<string>('HOST'),
+          port: configService.get<number>('PORT'),
           // ignoreTLS: true,
           secure: true,
           auth: {

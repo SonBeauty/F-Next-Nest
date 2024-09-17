@@ -6,7 +6,7 @@ import { User } from './schemas/user.schema';
 import mongoose, { Model } from 'mongoose';
 import { hashPassword } from 'src/helpers/util';
 import aqp from 'api-query-params';
-import { SignInDto } from '../auth/dto/signIn.dto';
+import { SignUpDto } from '../auth/dto/signUp.dto';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
 import { v4 as uuidv4 } from 'uuid';
@@ -80,7 +80,7 @@ export class UsersService {
     return await this.userModel.deleteOne({ _id: id });
   }
 
-  async handleRegister(registerDto: SignInDto) {
+  async handleRegister(registerDto: SignUpDto) {
     const { name, email, password } = registerDto;
 
     //check email

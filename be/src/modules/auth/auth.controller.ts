@@ -9,7 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './passport/local-auth.guard';
 import { Public } from '../decorator/customize';
-import { SignInDto } from './dto/signIn.dto';
+import { SignUpDto } from './dto/signUp.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 
 @Controller('auth')
@@ -28,7 +28,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
-  register(@Body() registerDto: SignInDto) {
+  register(@Body() registerDto: SignUpDto) {
     return this.authService.handleRegister(registerDto);
   }
 

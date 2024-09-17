@@ -3,7 +3,7 @@ import { UsersService } from '@/modules/users/users.service';
 import { comparePasswordHelper } from 'src/helpers/util';
 import { JwtService } from '@nestjs/jwt';
 import { UserDocument } from '../users/schemas/user.schema';
-import { SignInDto } from './dto/signIn.dto';
+import { SignUpDto } from './dto/signUp.dto';
 
 @Injectable()
 export class AuthService {
@@ -41,7 +41,7 @@ export class AuthService {
     };
   }
 
-  handleRegister = async (registerDto: SignInDto) => {
+  handleRegister = async (registerDto: SignUpDto) => {
     //check email
     // hashPassword
     return await this.usersService.handleRegister(registerDto);
