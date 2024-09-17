@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './passport/local-auth.guard';
-import { Public } from '../decorator/customize';
-import { SignUpDto } from './dto/signUp.dto';
+import { Public, ResponseMessage } from '../../decorator/customize';
+import { SignInDto } from './dto/signIn.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 
 @Controller('auth')
@@ -21,6 +21,7 @@ export class AuthController {
 
   @Post('login')
   @Public()
+  @ResponseMessage('login')
   @UseGuards(LocalAuthGuard)
   handleLogin(@Request() req) {
     return this.authService.login(req.user);

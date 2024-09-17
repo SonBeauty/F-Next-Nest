@@ -24,6 +24,7 @@ export class AuthService {
 
   async validate(username: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(username);
+    if (!user) return null;
     const isValidPassword = await comparePasswordHelper(
       password,
       user.password,
@@ -36,7 +37,13 @@ export class AuthService {
 
   async login(user: UserDocument) {
     const payload = { sub: user._id, username: user.email };
+
     return {
+      user: {
+        email: user.email,
+        name: user.name,
+        _id: user._id,
+      },
       access_token: await this.jwtService.signAsync(payload),
     };
   }

@@ -1,8 +1,12 @@
-import { Button } from "antd"
+import { auth } from "@/auth";
+import HomePage from "@/components/layout/homepage";
 
-export default function Home() {
-  return <>
-    <h1>Hello</h1>
-    <Button type="dashed">alo</Button>
-  </>;
+export default async function Home() {
+  const session = await auth()
+  return (
+    <div>
+      <HomePage />
+      <div>{JSON.stringify(session)}</div>
+    </div>
+  );
 }
